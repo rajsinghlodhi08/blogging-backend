@@ -1,0 +1,21 @@
+{
+  "name": "blogging-backend",
+  "version": "1.0.0",
+  "description": "A demo codebase for backend side",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "author": "Rajendra Singh",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "joi": "^17.13.3",
+    "joi-errors-for-forms": "^0.2.6",
+    "jsonwebtoken": "^9.0.2",
+    "md5": "^2.3.0",
+    "mongoose": "^8.7.0"
+  }
+}
