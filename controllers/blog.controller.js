@@ -1,5 +1,6 @@
 // Import Section
 const Blog = require('../db/models/blog')
+const User = require('../db/models/user')
 const Joi = require('joi')
 const formatJoiToForms = require('joi-errors-for-forms').form
 
@@ -59,11 +60,17 @@ module.exports.get = async function (req, res) {
             })
         }
 
-        const blog = await Blog.findById({ _id: blogId, author: req.decoded.userId })
+        const blog = await Blog.findById({ _id: blogId })
+        const user = await User.findById(blog.author).select('username')
+        const blogWithUsername = {
+            ...blog.toObject(),
+            username: user.username
+        }
+
         return res.status(200).json({
             success: true,
             message: 'Blog retrieved successfully',
-            response: blog
+            response: blogWithUsername
         })
     } catch (err) {
         console.error(err)
@@ -177,7 +184,7 @@ module.exports.delete = async function (req, res) {
         }
 
         // Delete the blog post
-        await Blog.deleteOne(blogId)
+        await Blog.deleteOne({ _id: blogId})
 
         return res.status(200).json({
             success: true,
@@ -198,7 +205,7 @@ module.exports.list = async function (req, res) {
             limit: Joi.number().default(10),
             page: Joi.number().default(1),
             title: Joi.string().trim(),
-            tags: Joi.array().items(Joi.string().trim())
+            tags: Joi.string()
         })
 
         const { error, value } = blogSchema.validate(req.query, {
@@ -224,7 +231,7 @@ module.exports.list = async function (req, res) {
         }
 
         if (value.tags) {
-            findBlogWhereOptions.tags = { $in: value.tags }
+            findBlogWhereOptions.tags = { $in: value.tags.split() }
         }
         const allBlogs = await Blog.find(findBlogWhereOptions)
         .skip((value.page - 1) * value.limit)
@@ -232,6 +239,14 @@ module.exports.list = async function (req, res) {
         .sort({ updatedAt: -1 })
 
         const totalBlogs = await Blog.countDocuments(findBlogWhereOptions)
+
+        const blogsWithUsernames = await Promise.all(allBlogs.map(async blog => {
+            const user = await User.findById(blog.author).select('username')
+            return {
+                ...blog.toObject(),
+                username: user ? user.username : 'Unknown'
+            }
+        }))
 
         const totalPages = Math.ceil(totalBlogs / value.limit)
 
@@ -242,7 +257,7 @@ module.exports.list = async function (req, res) {
                 totalBlogs,
                 totalPages,
                 currentPage: value.page,
-                allBlogs,
+                allBlogs: blogsWithUsernames,
             }
         })
     } catch (err) {

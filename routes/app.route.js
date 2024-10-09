@@ -14,7 +14,7 @@ router.delete('/user', [middleware.checkAccessToken], userController.delete)
 
 // Blog Controller Routes
 router.post('/blogs', [middleware.checkAccessToken], blogController.create)
-router.get('/blogs/:id', [middleware.checkAccessToken], blogController.get)
+router.get('/blogs/:id', blogController.get)
 router.put('/blogs/:id', [middleware.checkAccessToken], blogController.update)
 router.delete('/blogs/:id', [middleware.checkAccessToken], blogController.delete)
 router.get('/blogs', blogController.list)
